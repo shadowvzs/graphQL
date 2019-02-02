@@ -40,7 +40,15 @@ app.get('/graphql', graphqlHttp({
             mutation: RootMutation
         }
     `),
-    rootValue: {}
+    rootValue: {
+        events: () => {
+            return ['item 1', 'item 2', 'item 3']
+        },
+        createEvent: (args) => {
+            const eventName = args.name;
+            return eventName;
+        }
+    }
 }));
 
 // start/listen server to a port
@@ -54,5 +62,10 @@ app.listen(3000);
  *    - mutation is the post/put/patch/delete like request where we must change data
  *    - Subscription is websocket like requests 
  * 
- * - Schema is type depend
+ * - Schema is type depend so we cant declare types
+ * 
+ * - RootValue/Resolver is the resolver and must have exactly same names
+ *                          like what we used in schema 
+ * - mutation function have args like argument list and property 
+ *       must match with name and type in scheme
  */
