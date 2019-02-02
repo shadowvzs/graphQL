@@ -18,10 +18,26 @@ app.use(bodyParser.json());
 app.get('/graphql', graphqlHttp({
     // buildSchema takes string and build javascript schema object from it
     // we use backticket for multiline purpose
+    // type, schema is required
+
+    // events are array if string array then must put [String}
+    // if [String!] is like important
+    // if  [String!]! cannot be empty
+
+    // if createEvent(name: String): String 
+    // then in createEvent function must enter a string and return a string
     schema: buildSchema(`
+        type RootQuery {
+            events: [String!]
+        }
+
+        type RootMutation {
+            createEvent(name: String): String
+        }
+
         schema {
-            query:
-            mutation: 
+            query: RootQuery
+            mutation: RootMutation
         }
     `),
     rootValue: {}
@@ -33,10 +49,10 @@ app.listen(3000);
 
 /**
  * Note: 
- * In schema the:
+ * - Schema could ne:
  *    - query is the Get like request where we need data
  *    - mutation is the post/put/patch/delete like request where we must change data
- *    -  is websocket like requests 
+ *    - Subscription is websocket like requests 
  * 
- * 
+ * - Schema is type depend
  */
