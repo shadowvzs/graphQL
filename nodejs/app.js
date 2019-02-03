@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 // we must pass an object where we declare:
 // - scheme we create with graphql package
 // - rootValue is resolver function which must match with schema enpoint names
-app.get('/graphql', graphqlHttp({
+app.use('/graphql', graphqlHttp({
     // buildSchema takes string and build javascript schema object from it
     // we use backticket for multiline purpose
     // type, schema is required
@@ -28,7 +28,7 @@ app.get('/graphql', graphqlHttp({
     // then in createEvent function must enter a string and return a string
     schema: buildSchema(`
         type RootQuery {
-            events: [String!]
+            events: [String!]!
         }
 
         type RootMutation {
@@ -38,11 +38,11 @@ app.get('/graphql', graphqlHttp({
         schema {
             query: RootQuery
             mutation: RootMutation
-        }`
-    ),
+        }
+    `),
     rootValue: {
         events: () => {
-            return ['item 1', 'item 2', 'item 3']
+            return ['item 1', 'item 2', 'item 3'];
         },
         createEvent: (args) => {
             const eventName = args.name;
