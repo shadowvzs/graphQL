@@ -8,6 +8,9 @@ const { buildSchema } = require('graphql');
 
 const app = express();
 
+// temporary data for demonstration
+const events = [];
+
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
 
@@ -24,15 +27,34 @@ app.use('/graphql', graphqlHttp({
     // if [String!] is like important
     // if  [String!]! cannot be empty
 
-    // if createEvent(name: String): String 
+    // if createEvent(name: String): String
     // then in createEvent function must enter a string and return a string
+
+    // Event is custom type here which could have any name :)
+    // in types we have name: type pairs
+    // id must have ID type with !
     schema: buildSchema(`
+        type Event {
+            _id: ID!
+            title: String!
+            description: String!
+            price: Float!
+            date: String!
+        }
+
+        input EventInput {
+            title: String!
+            description: String!
+            price: Float!
+            date: String!
+        }
+
         type RootQuery {
-            events: [String!]!
+            events: [Event!]!
         }
 
         type RootMutation {
-            createEvent(name: String): String
+            createEvent(myEventInput: EventInput): Event
         }
 
         schema {
@@ -42,11 +64,19 @@ app.use('/graphql', graphqlHttp({
     `),
     rootValue: {
         events: () => {
-            return ['item 1', 'item 2', 'item 3'];
+            return events;
         },
         createEvent: (args) => {
-            const eventName = args.name;
-            return eventName;
+            const event = {
+                _id: Math.random().toString(),
+                title: args.myEventInput.title,
+                description: args.myEventInput.description,
+                price: +args.myEventInput.price,
+                date: args.myEventInput.date
+            };
+            console.log(args, event);
+            events.push(event);
+            return event;
         }
     },
     graphiql: true
@@ -57,18 +87,51 @@ app.listen(3000);
 
 
 /**
- * Note: 
- * - Schema could ne:
+ * Note:
+ * - Type:
+ *    - we have rootTypes which contain an array of events
+           - can be empty array but if have value in array then must be events
+ *         - ex.: events: [Event!]! - Event is custom event name (! used because required/important to have)
+ *    - we have custom events:
+ *         - ex. like above with _id: ID!
+ * - Schema could be:
  *    - query is the Get like request where we need data
+ *           - param could be typed names or another custom input type
+ *                 - createEvent(title: String!, price: Float!): Event
+ *                 - createEvent(myEventInput: EventInput): Event
+ *                      - name convention: must start with event name like EventInput if event name is Event
+ *                      - we also give custom argument name and then type must be our type input
+ *           - return an array of events
  *    - mutation is the post/put/patch/delete like request where we must change data
- *    - Subscription is websocket like requests 
- * 
+ *           - return an event
+ *    - Subscription is websocket like requests
+ *
  *    - Schema is type depend so we cant declare types
- * 
+ *
  * - RootValue/Resolver is the resolver and must have exactly same names
- *                          like what we used in schema 
- *    - mutation function have args like argument list and property 
+ *                          like what we used in schema
+ *    - mutation function have args like argument list and property
  *       must match with name and type in scheme
- * 
+ *
  * - graphiql/Debugger - optional
  */
+
+/**
+* How to test?
+* Browser: 127.0.0.1:3000/graphql
+* query {
+*    events {
+*      title
+*      price
+*   }
+* }
+*
+* mutation {
+*   createEvent(myEventInput: {title: "a title", description: "test description", price: 12.3, date: "2019-02-04T06:45:46.489Z"}) {
+*     title
+*     description
+*   }
+* }
+* // in createEvent(args) we can access like: title: args.myEventInput.title,
+*
+*/
