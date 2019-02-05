@@ -5,8 +5,18 @@ const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 // buildSchema help to build a js object literal
 const { buildSchema } = require('graphql');
+// we need mongoose package for connect to mongodb
+const mongoose = require('mongoose');
 
 const app = express();
+
+//mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true});
+/*
+const Cat = mongoose.model('Cat', { name: String });
+
+const kitty = new Cat({ name: 'Zildjian' });
+kitty.save().then(() => console.log('meow'));
+*/
 
 // temporary data for demonstration
 const events = [];
@@ -82,8 +92,34 @@ app.use('/graphql', graphqlHttp({
     graphiql: true
 }));
 
-// start/listen server to a port
-app.listen(3000);
+console.log(process.env.MONGO_USER,process.env.MONGO_PASSWORD);
+
+// we connect to mongo db with info which we get from enviroment variables
+// how to connect to MongoDB Atlas Cloud Cluster
+/*
+mongoose
+  .connect(`mongodb+srv://${process.env.MONGO_USER}:${
+      process.env.MONGO_PASSWORD
+  }@cluster0-euqqc.mongodb.net/test?retryWrites=true`)
+  .then( () => {
+      // if we can connect to mongodb then we start express http server
+      app.listen(3000);
+  }).catch(err => {
+      // we cannot connect to mongodb
+      console.log(err);
+  });
+*/
+
+
+// we connect to local mongo db with host and password (ex. if mongodb is another container)
+const mongoOptions = { useNewUrlParser: true };
+
+mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${mongo.db}`, mongoOptions)
+    .then(() => {
+        // if we can connect to mongodb then we start express http server
+        app.listen(3000);
+    })
+    .catch( err => console.log(err) );
 
 
 /**
