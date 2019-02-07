@@ -7,19 +7,10 @@ const graphqlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
 // we need mongoose package for connect to mongodb
 const mongoose = require('mongoose');
+// export the model constructor, which we will use for create new event
+const Event = require('./models/event');
 
 const app = express();
-
-//mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true});
-/*
-const Cat = mongoose.model('Cat', { name: String });
-
-const kitty = new Cat({ name: 'Zildjian' });
-kitty.save().then(() => console.log('meow'));
-*/
-
-// temporary data for demonstration
-const events = [];
 
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
@@ -52,6 +43,12 @@ app.use('/graphql', graphqlHttp({
             date: String!
         }
 
+        type Event {
+            _id: ID!
+            email: String!
+            password: String
+        }        
+
         input EventInput {
             title: String!
             description: String!
@@ -74,33 +71,58 @@ app.use('/graphql', graphqlHttp({
     `),
     rootValue: {
         events: () => {
+            // Event.find({title: "test"});
+            return Event.find().then( events => {
+                return events.map(event => {
+                    return {...event._doc }
+                    // some case _id is object and need to convert to string
+                    // return {...event._doc, _id: event._doc._id.toString() }
+                    // or use property what added by mongoose "id"
+                    // return {...event._doc, _id: event.id }
+                });
+            })
+            .catch(err => {
+                throw err;
+            });
             return events;
         },
-        createEvent: (args) => {
-            const event = {
-                _id: Math.random().toString(),
+        createEvent: args => {
+            // create a new mongodb model
+            const event = new Event({
                 title: args.myEventInput.title,
                 description: args.myEventInput.description,
                 price: +args.myEventInput.price,
-                date: args.myEventInput.date
-            };
-            console.log(args, event);
-            events.push(event);
-            return event;
+                date: new Date(args.myEventInput.date)
+            });
+            // save the model
+            return event
+              .save().then(result => {
+                  console.log(result);
+                  // it will return the core doc properties
+                  return {...result._doc};
+                  // some case _id is object and need to convert to string
+                  // return {...result._doc, _id: result._doc._id.toString() }
+                  // or use property what added by mongoose "id"
+                  // return {...result._doc, _id: result.id) }
+              }).catch(err => {
+                  console.log(err);
+                  throw err;
+              });
         }
     },
     graphiql: true
 }));
 
-console.log(process.env.MONGO_USER,process.env.MONGO_PASSWORD);
-
 // we connect to mongo db with info which we get from enviroment variables
 // how to connect to MongoDB Atlas Cloud Cluster
 /*
+
+console.log(process.env.MONGO_USER,process.env.MONGO_PASSWORD);
+
 mongoose
   .connect(`mongodb+srv://${process.env.MONGO_USER}:${
       process.env.MONGO_PASSWORD
-  }@cluster0-euqqc.mongodb.net/test?retryWrites=true`)
+  }@cluster0-euqqc.mongodb.net/myDB?retryWrites=true`)
   .then( () => {
       // if we can connect to mongodb then we start express http server
       app.listen(3000);
@@ -113,10 +135,11 @@ mongoose
 
 // we connect to local mongo db with host and password (ex. if mongodb is another container)
 const mongoOptions = { useNewUrlParser: true };
-
-mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${mongo.db}`, mongoOptions)
+const {MONGO_HOST, MONGO_PORT, MONGO_DB} = process.env;
+mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptions)
     .then(() => {
         // if we can connect to mongodb then we start express http server
+        console.log('kakukk');
         app.listen(3000);
     })
     .catch( err => console.log(err) );
