@@ -3,12 +3,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 // middleware which convert the incoming json to valid graphql query
 const graphqlHttp = require('express-graphql');
+// we encrypt password and for this we use bcryptjs module
+const bcrypt = require('bcryptjs');
 // buildSchema help to build a js object literal
 const { buildSchema } = require('graphql');
 // we need mongoose package for connect to mongodb
 const mongoose = require('mongoose');
 // export the model constructor, which we will use for create new event
 const Event = require('./models/event');
+const User = require('./models/user');
 
 const app = express();
 
@@ -43,17 +46,22 @@ app.use('/graphql', graphqlHttp({
             date: String!
         }
 
-        type Event {
-            _id: ID!
-            email: String!
-            password: String
-        }        
-
         input EventInput {
             title: String!
             description: String!
             price: Float!
             date: String!
+        }
+
+        type User {
+            _id: ID!
+            email: String!
+            password: String
+        }
+
+        input UserInput {
+            email: String!
+            password: String!
         }
 
         type RootQuery {
@@ -62,6 +70,7 @@ app.use('/graphql', graphqlHttp({
 
         type RootMutation {
             createEvent(myEventInput: EventInput): Event
+            createUser(myUserInput: UserInput): User
         }
 
         schema {
@@ -108,7 +117,35 @@ app.use('/graphql', graphqlHttp({
                   console.log(err);
                   throw err;
               });
-        }
+        },
+        createUser: args => {
+            // lets check if email is user or no
+            return User.findOne({email: args.userInput.email}).then( user => {
+                if(user) {
+                    throw new Error('User email already exist');
+                }
+                // if not exist email in suers then encrypt password
+                // for encrypt the string we need the string and salt (string or number)
+                // bcrypt is async/promise
+                return bcrypt.hash(args.myUserInput.password, 12);
+            }).then( hashedPassword => {
+                // we create a new model with our data
+                const user = new User({
+                    email: args.myUserInput.email,
+                    password: hashedPassword
+                });
+                // return another promise from mooogse
+                return user.save();
+            })
+            // promise chain: if user was saved then we return the data
+            .then( result => {
+                // but without password
+                return { ...result._doc, password:null, _id: result.id };
+            })
+            .catch(err => {
+                throw err;
+            });
+        },
     },
     graphiql: true
 }));
