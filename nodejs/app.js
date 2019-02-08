@@ -101,18 +101,35 @@ app.use('/graphql', graphqlHttp({
                 title: args.myEventInput.title,
                 description: args.myEventInput.description,
                 price: +args.myEventInput.price,
-                date: new Date(args.myEventInput.date)
+                date: new Date(args.myEventInput.date),
+                creator: 'TheUserIdWillBeHere'
             });
+
+            let createdEvent;
             // save the model
             return event
-              .save().then(result => {
-                  console.log(result);
-                  // it will return the core doc properties
-                  return {...result._doc};
+              .save()
+              .then(result => {
+                  // it was saved and we get the core doc properties and we set reult into variable
+                  createdEvent = {...result._doc};
                   // some case _id is object and need to convert to string
                   // return {...result._doc, _id: result._doc._id.toString() }
                   // or use property what added by mongoose "id"
                   // return {...result._doc, _id: result.id) }
+
+                  // check if user exist in db
+                  return User.findById('TheUserIdWillBeHere');
+              .then(user => {
+                  if(!user) {
+                      throw new Error('User not exist');
+                  }
+                  // push is mongodb feature, we pass event object wich was updated after save
+                  // and mongodb use id from event
+                  user.createdEvent.push(event);
+                  return user.save();
+              .then(result => {
+                  // it will return the createdEvent
+                  return createdEvent;
               }).catch(err => {
                   console.log(err);
                   throw err;
