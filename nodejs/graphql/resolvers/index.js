@@ -5,101 +5,100 @@ const Event = require('../../models/event');
 const User = require('../../models/user');
 
 // get events from events collection (by ids)
-const events = eventIds => {
+const events = async eventIds => {
     // we search after array of ids, ex.: _id: {$in: eventsIds}
-    return Event.find({ _id: {$in: eventIds}} )
-        .then(events => events.map( event => {
+    try {
+        const events = await Event.find({ _id: {$in: eventIds}} );
+        return events.map( event => {
             return {
-              ...event._doc, 
-              _id: event.id,
-              creator: user.bind(this, event.creator)
+                ...event._doc, 
+                _id: event.id,
+                date: new Date(event._doc.date).toISOString(),
+                creator: user.bind(this, event.creator)
             }
-        }))
-        .catch(err => { throw err });
+        });
+    } catch(err) { 
+        throw err;
+    };
 }
 
 // get user from users collection (by id)
-const user = userId => {
-    return User.findById(userId)
-        .then(user => {
-          return {
+const user = async userId => {
+    try {
+        const user = await User.findById(userId);
+        return ({
             ...user._doc, 
             _id: user.id,
             createdEvents: events.bind(this, user.createdEvents)
-          }
-        })
-        .catch(err => { throw err });
+        });
+    } catch(err) { 
+        throw err;
+    };
 }
 
 
 module.exports = {
-    events: () => {
-        // Event.find({title: "test"});
-        return Event.find()
-        .then( events => {
+    events: async () => {
+        try {
+            const events = await Event.find();
             return events.map(event => {
                 return {
-                  ...event._doc, 
-                  _id: event.id, 
-                  creator: user.bind(this, event._doc.creator)
-                }
-                // some case _id is object and need to convert to string
-                // return {...event._doc, _id: event._doc._id.toString() }
-                // or use property what added by mongoose "id"
-                // return {...event._doc, _id: event.id }
+                    ...event._doc, 
+                    _id: event.id,
+                    date: new Date(event._doc.date).toISOString(), 
+                    creator: user.bind(this, event._doc.creator)
+                };
             });
-        })
-        .catch(err => {
+        } catch(err) { 
             throw err;
-        });
-        return events;
+        };
     },
-    createEvent: args => {
+    createEvent: async args => {
         // create a new mongodb model
-        const event = new Event({
-            title: args.myEventInput.title,
-            description: args.myEventInput.description,
-            price: +args.myEventInput.price,
-            date: new Date(args.myEventInput.date),
-            creator: '5c5e5b1a9ea00201f09da9b8'
-        });
+        try {
+            const event = new Event({
+                title: args.myEventInput.title,
+                description: args.myEventInput.description,
+                price: +args.myEventInput.price,
+                date: new Date(args.myEventInput.date),
+                creator: '5c5e5b1a9ea00201f09da9b8'
+            });
 
-        let createdEvent;
-        // save the model
-        return event
-          .save()
-          .then(result => {
-              // it was saved and we get the core doc properties and we set reult into variable
-              createdEvent = {
-                ...result._doc,
-                _id: result.id,
-                creator: user.bind(this, result.creator)
-              };
-              // some case _id is object and need to convert to string
-              // return {...result._doc, _id: result._doc._id.toString() }
-              // or use property what added by mongoose "id"
-              // return {...result._doc, _id: result.id) }
-
-              // check if user exist in db
-              return User.findById(event.creator);
-          })
-          .then(user => {
-              if(!user) {
-                  throw new Error('User not exist');
-              }
-              // push is mongodb feature, we pass event object wich was updated after save
-              // and mongodb use id from event
-              user.createdEvents.push(event);
-              return user.save();
-          })
-          .then(result => {
-              // it will return the createdEvent
-              return createdEvent;
-          }).catch(err => {
-              console.log(err);
-              throw err;
-          });
-    }
+            let createdEvent;
+            // save the model
+            let savedEvent = await event.save();
+            const creatorUser = await User.findById(event.creator);             
+            if(!creatorUser) {
+                throw new Error('User not exist');
+            }
+            creatorUser.createdEvents.push(event);
+            await creatorUser.save();
+            return {
+                _id: event.id,
+                ...event._doc, 
+                creator: user.bind(this, event.creator)
+            }
+        } catch(err) { 
+            throw err;
+        };
+    },
+    createUser: async args => {
+        // lets check if email is user or no
+        try {
+            if (await User.findOne({email: args.myUserInput.email})) {
+                throw new Error('User email already exist');
+            }
+            const hashedPassword = await bcrypt.hash(args.myUserInput.password, 12);
+            const user = new User({
+                email: args.myUserInput.email,
+                password: hashedPassword
+            });
+            await user.save();
+            return { ...user._doc, password: null, _id: user.id };
+        } catch(err) { 
+            throw err;
+        };      
+    },    
 };
 
 
