@@ -18,6 +18,12 @@ const app = express();
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
 
+const user = userId => {
+    return User.findById(userId)
+        .then(user => ({...user._doc, _id: user.id}))
+        .catch(err => { throw err });
+}
+
 // graphql endpoint where graphql middleware will proccess the json to query
 // we must pass an object where we declare:
 // - scheme we create with graphql package
@@ -36,7 +42,9 @@ app.use('/graphql', graphqlHttp({
     // or we have has many relation like users have more event then we can declare type like this:
     // createdEvents: [Event!]
     // NOte 1: if we use other Type in relationship then we apply same rules to it!
-    // Note 2: need populate method after find (need field name), which get the relations from mongodb, ex.: .populate('creator')
+    // Note 2: 
+    //    a) need populate method after find (need field name), which get the relations from mongodb, ex.: .populate('creator')
+    //    b) search manually after relations with a function
 
     // if createEvent(name: String): String
     // then in createEvent function must enter a string and return a string
@@ -90,10 +98,14 @@ app.use('/graphql', graphqlHttp({
     rootValue: {
         events: () => {
             // Event.find({title: "test"});
-            return Event.find().populate('creator')
+            return Event.find()
             .then( events => {
                 return events.map(event => {
-                    return {...event._doc }
+                    return {
+                      ...event._doc, 
+                      _id: event.id, 
+                      creator: user.bind(this, event._doc.creator)
+                    }
                     // some case _id is object and need to convert to string
                     // return {...event._doc, _id: event._doc._id.toString() }
                     // or use property what added by mongoose "id"
