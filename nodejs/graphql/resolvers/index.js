@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 // import the model constructor, which we will use for create new event and user
 const Event = require('../../models/event');
 const User = require('../../models/user');
+const Booking = require('../../models/booking');
 
 // get events from events collection (by ids)
 const events = async eventIds => {
@@ -53,6 +54,23 @@ module.exports = {
             throw err;
         };
     },
+    bookings: async args => {
+        try {
+            const bookings = await Booking.find();
+            return bookings.map( booking => {
+                return {
+                    ...booking._doc, 
+                    _id: booking.id,
+                    event: events.bind(this, [booking._doc.event]),
+                    user: user.bind(this, booking._doc.user),
+                    createdAt: new Date(booking._doc.createdAt).toISOString(), 
+                    updatedAt: new Date(booking._doc.updatedAt).toISOString(), 
+                };
+            });
+        } catch(err) { 
+            throw err;
+        };    
+    },
     createEvent: async args => {
         // create a new mongodb model
         try {
@@ -98,7 +116,24 @@ module.exports = {
         } catch(err) { 
             throw err;
         };      
-    },    
+    },
+    bookEvent: async args => {
+        //5c5e73b1241d0f059bc231c7
+        const fetchedEvent = await Event.findOne({_id: args.eventId});
+        const booking = new Booking({
+            user: '5c5e5b1a9ea00201f09da9b8',
+            event: fetchedEvent._id
+        });
+        const result = await booking.save();
+        return {
+            ...result._doc, 
+            _id: result.id,
+            event: events.bind(this, [result._doc.event]),
+            user: user.bind(this, result._doc.user),
+            createdAt: new Date(result._doc.createdAt).toISOString(), 
+            updatedAt: new Date(result._doc.updatedAt).toISOString(),            
+        }
+    }
 };
 
 

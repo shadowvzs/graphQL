@@ -15,16 +15,22 @@ const eventSchema = new Schema({
         type: Number,
         required: true
     },
+    date: {
+        type: Date,
+        required: true
+    },
     creator: {
         // id from User model
         type: Schema.Types.ObjectId,
         // relationship with User model which must be defined both side
         ref: 'User'
     },
-    date: {
-        type: Date,
-        required: true
-    },
+    enrolledUsers: {
+        // id from User model
+        type: Schema.Types.ObjectId,
+        // relationship with User model which must be defined both side
+        ref: 'Booking'        
+    }
 });
 
 // create model with a name and based on schema
