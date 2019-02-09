@@ -31,6 +31,13 @@ app.use('/graphql', graphqlHttp({
     // if [String!] is like important
     // if  [String!]! cannot be empty
 
+    // if we have relationship with User collection (example creator) then it we can use type name, ex:
+    // creator: User! 
+    // or we have has many relation like users have more event then we can declare type like this:
+    // createdEvents: [Event!]
+    // NOte 1: if we use other Type in relationship then we apply same rules to it!
+    // Note 2: need populate method after find (need field name), which get the relations from mongodb, ex.: .populate('creator')
+
     // if createEvent(name: String): String
     // then in createEvent function must enter a string and return a string
 
@@ -44,6 +51,7 @@ app.use('/graphql', graphqlHttp({
             description: String!
             price: Float!
             date: String!
+            creator: User!
         }
 
         input EventInput {
@@ -57,6 +65,7 @@ app.use('/graphql', graphqlHttp({
             _id: ID!
             email: String!
             password: String
+            createdEvents: [Event!]
         }
 
         input UserInput {
@@ -81,7 +90,8 @@ app.use('/graphql', graphqlHttp({
     rootValue: {
         events: () => {
             // Event.find({title: "test"});
-            return Event.find().then( events => {
+            return Event.find().populate('creator')
+            .then( events => {
                 return events.map(event => {
                     return {...event._doc }
                     // some case _id is object and need to convert to string
