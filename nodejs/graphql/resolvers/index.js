@@ -10,14 +10,7 @@ const events = async eventIds => {
     // we search after array of ids, ex.: _id: {$in: eventsIds}
     try {
         const events = await Event.find({ _id: {$in: eventIds}} );
-        return events.map( event => {
-            return {
-                ...event._doc, 
-                _id: event.id,
-                date: new Date(event._doc.date).toISOString(),
-                creator: user.bind(this, event.creator)
-            }
-        });
+        return events.map( event => formatEvent(event) );
     } catch(err) { 
         throw err;
     };
@@ -27,29 +20,56 @@ const events = async eventIds => {
 const user = async userId => {
     try {
         const user = await User.findById(userId);
-        return ({
-            ...user._doc, 
-            _id: user.id,
-            createdEvents: events.bind(this, user.createdEvents)
-        });
+        return formatUser(user);
     } catch(err) { 
         throw err;
     };
 }
+
+// get a single event (by id)
+const singleEvent = async eventId => {
+    try {
+        const event = await Event.findById(eventId);
+        return formatEvent(event);
+    } catch(err) { 
+        throw err;
+    };
+}
+
+const formatUser = user => {
+    return ({
+        ...user._doc, 
+        _id: user.id,
+        createdEvents: events.bind(this, user.createdEvents)
+    });    
+}
+
+const formatEvent = event => {
+    return ({
+        ...event._doc, 
+        _id: event.id,
+        creator: user.bind(this, event.creator)
+    });    
+}
+
+const formatBooking = booking => {
+    return ({
+        ...booking._doc, 
+        _id: booking.id,
+        event: singleEvent.bind(this, [booking._doc.event]),
+        user: user.bind(this, booking._doc.user),
+        createdAt: new Date(booking._doc.createdAt).toISOString(), 
+        updatedAt: new Date(booking._doc.updatedAt).toISOString(), 
+    });    
+}
+
 
 
 module.exports = {
     events: async () => {
         try {
             const events = await Event.find();
-            return events.map(event => {
-                return {
-                    ...event._doc, 
-                    _id: event.id,
-                    date: new Date(event._doc.date).toISOString(), 
-                    creator: user.bind(this, event._doc.creator)
-                };
-            });
+            return events.map(event => formatEvent(event));
         } catch(err) { 
             throw err;
         };
@@ -57,16 +77,7 @@ module.exports = {
     bookings: async args => {
         try {
             const bookings = await Booking.find();
-            return bookings.map( booking => {
-                return {
-                    ...booking._doc, 
-                    _id: booking.id,
-                    event: events.bind(this, [booking._doc.event]),
-                    user: user.bind(this, booking._doc.user),
-                    createdAt: new Date(booking._doc.createdAt).toISOString(), 
-                    updatedAt: new Date(booking._doc.updatedAt).toISOString(), 
-                };
-            });
+            return bookings.map( booking => formatBooking(booking));
         } catch(err) { 
             throw err;
         };    
@@ -84,18 +95,14 @@ module.exports = {
 
             let createdEvent;
             // save the model
-            let savedEvent = await event.save();
+            const savedEvent = await event.save();
             const creatorUser = await User.findById(event.creator);             
             if(!creatorUser) {
                 throw new Error('User not exist');
             }
             creatorUser.createdEvents.push(event);
             await creatorUser.save();
-            return {
-                _id: event.id,
-                ...event._doc, 
-                creator: user.bind(this, event.creator)
-            }
+            return formatEvent(savedEvent)
         } catch(err) { 
             throw err;
         };
@@ -111,29 +118,40 @@ module.exports = {
                 email: args.myUserInput.email,
                 password: hashedPassword
             });
-            await user.save();
-            return { ...user._doc, password: null, _id: user.id };
+            const savedUser = await user.save();
+            return formatUser(savedUser);
         } catch(err) { 
             throw err;
         };      
     },
     bookEvent: async args => {
-        //5c5e73b1241d0f059bc231c7
-        const fetchedEvent = await Event.findOne({_id: args.eventId});
-        const booking = new Booking({
-            user: '5c5e5b1a9ea00201f09da9b8',
-            event: fetchedEvent._id
-        });
-        const result = await booking.save();
-        return {
-            ...result._doc, 
-            _id: result.id,
-            event: events.bind(this, [result._doc.event]),
-            user: user.bind(this, result._doc.user),
-            createdAt: new Date(result._doc.createdAt).toISOString(), 
-            updatedAt: new Date(result._doc.updatedAt).toISOString(),            
-        }
-    }
+        try {
+            const fetchedEvent = await Event.findOne({_id: args.eventId});
+            const booking = new Booking({
+                user: '5c5e5b1a9ea00201f09da9b8',
+                event: fetchedEvent._id
+            });
+            const result = await booking.save();
+            return formatBooking(result);
+        } catch(err) { 
+            throw err;
+        };    
+    },
+    cancelBooking: async args => {
+        try {
+            const booking = await Booking.findById(args.bookingId);
+            if (!booking) {
+                throw "Booking not exist";
+            }
+            const event = singleEvent(booking.event);
+            if (!await Booking.deleteOne({_id: booking.id})) {
+                throw "Booking cannot be deleted";
+            }
+            return event;
+        } catch(err) { 
+            throw err;
+        };   
+    },
 };
 
 
@@ -171,7 +189,8 @@ module.exports = {
 *   }
 * }
 *
-*
+* Strongest point in graphQL is if we call a nested type then it will be loaded 
+* from mongodb else we don't bother with loading that nested object
 *
 *
 */
