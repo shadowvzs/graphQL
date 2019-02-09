@@ -18,11 +18,33 @@ const app = express();
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
 
-const user = userId => {
-    return User.findById(userId)
-        .then(user => ({...user._doc, _id: user.id}))
+// get events from events collection (by ids)
+const events = eventIds => {
+    // we search after array of ids, ex.: _id: {$in: eventsIds}
+    return Event.find({ _id: {$in: eventIds}} )
+        .then(events => events.map( event => {
+            return {
+              ...event._doc, 
+              _id: event.id,
+              creator: user.bind(this, event.creator)
+            }
+        }))
         .catch(err => { throw err });
 }
+
+// get user from users collection (by id)
+const user = userId => {
+    return User.findById(userId)
+        .then(user => {
+          return {
+            ...user._doc, 
+            _id: user.id,
+            createdEvents: events.bind(this, user.createdEvents)
+          }
+        })
+        .catch(err => { throw err });
+}
+
 
 // graphql endpoint where graphql middleware will proccess the json to query
 // we must pass an object where we declare:
@@ -274,5 +296,23 @@ mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptio
 *   }
 * }
 * // in createEvent(args) we can access like: title: args.myEventInput.title,
+*
+* // Test nested relations
+*
+* query {
+*   events {
+*     title
+*     creator {
+*       createdEvents {
+*         creator {
+*           email
+*         }
+*       }
+*     } 
+*   }
+* }
+*
+*
+*
 *
 */
