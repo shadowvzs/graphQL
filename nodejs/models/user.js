@@ -11,7 +11,7 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
-    // we use array for user events
+    // we use array for user events, like array prop, User.createdEvents = []
     createdEvents: [
       {
           // this will be id from event model
@@ -19,11 +19,7 @@ const userSchema = new Schema({
           // set relation with other model, must be defined both here and in other model
           ref: 'Event'
       }
-    ],
-    date: {
-        type: Date,
-        required: true
-    },
+    ]
 });
 
 // create model with a name and based on schema

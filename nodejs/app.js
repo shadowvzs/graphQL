@@ -102,7 +102,7 @@ app.use('/graphql', graphqlHttp({
                 description: args.myEventInput.description,
                 price: +args.myEventInput.price,
                 date: new Date(args.myEventInput.date),
-                creator: 'TheUserIdWillBeHere'
+                creator: '5c5e5b1a9ea00201f09da9b8'
             });
 
             let createdEvent;
@@ -118,15 +118,18 @@ app.use('/graphql', graphqlHttp({
                   // return {...result._doc, _id: result.id) }
 
                   // check if user exist in db
-                  return User.findById('TheUserIdWillBeHere');
+                  return User.findById(event.creator);
+              })
               .then(user => {
                   if(!user) {
                       throw new Error('User not exist');
                   }
                   // push is mongodb feature, we pass event object wich was updated after save
                   // and mongodb use id from event
-                  user.createdEvent.push(event);
+                  console.log(user);
+                  user.createdEvents.push(event);
                   return user.save();
+              })
               .then(result => {
                   // it will return the createdEvent
                   return createdEvent;
@@ -137,7 +140,7 @@ app.use('/graphql', graphqlHttp({
         },
         createUser: args => {
             // lets check if email is user or no
-            return User.findOne({email: args.userInput.email}).then( user => {
+            return User.findOne({email: args.myUserInput.email}).then( user => {
                 if(user) {
                     throw new Error('User email already exist');
                 }
@@ -151,12 +154,14 @@ app.use('/graphql', graphqlHttp({
                     email: args.myUserInput.email,
                     password: hashedPassword
                 });
+                console.log(user);
                 // return another promise from mooogse
                 return user.save();
             })
             // promise chain: if user was saved then we return the data
             .then( result => {
                 // but without password
+                console.log( { ...result._doc, password:null, _id: result.id });
                 return { ...result._doc, password:null, _id: result.id };
             })
             .catch(err => {
@@ -179,7 +184,7 @@ mongoose
   }@cluster0-euqqc.mongodb.net/myDB?retryWrites=true`)
   .then( () => {
       // if we can connect to mongodb then we start express http server
-      app.listen(3000);
+      app.listen(3000); 
   }).catch(err => {
       // we cannot connect to mongodb
       console.log(err);
@@ -190,6 +195,7 @@ mongoose
 // we connect to local mongo db with host and password (ex. if mongodb is another container)
 const mongoOptions = { useNewUrlParser: true };
 const {MONGO_HOST, MONGO_PORT, MONGO_DB} = process.env;
+console.log(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`);
 mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptions)
     .then(() => {
         // if we can connect to mongodb then we start express http server

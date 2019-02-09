@@ -15,4 +15,4 @@ DB_PORT="27017"
 
 clear
 echo "start mongoDB container..."
-sudo docker run --rm -v ${EXT_DB_DIR}:${INT_DB_DIR} -v ${EXT_DB_SHELL}:${INT_DB_SHELL} -it -p ${DB_PORT}:${DB_PORT} --network ${DOCKER_NETWORK} --name ${DB_CONTAINER_NAME} ${DB_IMAGE} /bin/bash
+sudo docker run --rm -v ${EXT_DB_DIR}:${INT_DB_DIR} -v ${EXT_DB_SHELL}:${INT_DB_SHELL} -it -p ${DB_PORT}:${DB_PORT} --network ${DOCKER_NETWORK} --privileged --name ${DB_CONTAINER_NAME} ${DB_IMAGE} /bin/bash
