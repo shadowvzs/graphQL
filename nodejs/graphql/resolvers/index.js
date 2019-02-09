@@ -10,6 +10,7 @@ const events = async eventIds => {
     // we search after array of ids, ex.: _id: {$in: eventsIds}
     try {
         const events = await Event.find({ _id: {$in: eventIds}} );
+        if (!events) { return false; }
         return events.map( event => formatEvent(event) );
     } catch(err) { 
         throw err;
@@ -20,6 +21,7 @@ const events = async eventIds => {
 const user = async userId => {
     try {
         const user = await User.findById(userId);
+        if (!user) { return false; }
         return formatUser(user);
     } catch(err) { 
         throw err;
@@ -30,11 +32,13 @@ const user = async userId => {
 const singleEvent = async eventId => {
     try {
         const event = await Event.findById(eventId);
+        if (!event) { return false; }
         return formatEvent(event);
     } catch(err) { 
         throw err;
     };
 }
+
 
 const formatUser = user => {
     return ({
@@ -56,7 +60,7 @@ const formatBooking = booking => {
     return ({
         ...booking._doc, 
         _id: booking.id,
-        event: singleEvent.bind(this, [booking._doc.event]),
+        event: singleEvent.bind(this, booking._doc.event),
         user: user.bind(this, booking._doc.user),
         createdAt: new Date(booking._doc.createdAt).toISOString(), 
         updatedAt: new Date(booking._doc.updatedAt).toISOString(), 
@@ -66,6 +70,7 @@ const formatBooking = booking => {
 
 
 module.exports = {
+
     events: async () => {
         try {
             const events = await Event.find();
@@ -74,6 +79,7 @@ module.exports = {
             throw err;
         };
     },
+
     bookings: async args => {
         try {
             const bookings = await Booking.find();
@@ -82,6 +88,7 @@ module.exports = {
             throw err;
         };    
     },
+
     createEvent: async args => {
         // create a new mongodb model
         try {
@@ -102,11 +109,12 @@ module.exports = {
             }
             creatorUser.createdEvents.push(event);
             await creatorUser.save();
-            return formatEvent(savedEvent)
+            return formatEvent(savedEvent);
         } catch(err) { 
             throw err;
         };
     },
+
     createUser: async args => {
         // lets check if email is user or no
         try {
@@ -124,9 +132,10 @@ module.exports = {
             throw err;
         };      
     },
+
     bookEvent: async args => {
         try {
-            const fetchedEvent = await Event.findOne({_id: args.eventId});
+            const fetchedEvent = await Event.findById(args.eventId);
             const booking = new Booking({
                 user: '5c5e5b1a9ea00201f09da9b8',
                 event: fetchedEvent._id
@@ -137,21 +146,26 @@ module.exports = {
             throw err;
         };    
     },
+
     cancelBooking: async args => {
         try {
             const booking = await Booking.findById(args.bookingId);
             if (!booking) {
                 throw "Booking not exist";
             }
-            const event = singleEvent(booking.event);
             if (!await Booking.deleteOne({_id: booking.id})) {
                 throw "Booking cannot be deleted";
+            }
+            const event = await singleEvent(booking.event);
+            if (!event) {
+                throw "Event not exist";
             }
             return event;
         } catch(err) { 
             throw err;
         };   
     },
+
 };
 
 
@@ -186,6 +200,16 @@ module.exports = {
 *         }
 *       }
 *     } 
+*   }
+* }
+
+* mutation {
+*   cancelBooking(bookingId: "5c5e82592036f8069865c9d7") {
+*     _id
+*      title
+*     creator {
+*       _id
+*     }
 *   }
 * }
 *
