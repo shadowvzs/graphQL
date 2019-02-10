@@ -69,3 +69,4 @@ const formatBooking = booking => {
 exports.singleEvent = singleEvent;
 exports.formatEvent = formatEvent;
 exports.formatBooking = formatBooking;
+exports.formatUser = formatUser;
