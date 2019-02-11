@@ -10,11 +10,17 @@ const mongoose = require('mongoose');
 const graphQlSchema = require('./graphql/schema');
 // import the root resolver
 const graphQlResolvers = require('./graphql/resolvers');
+// auth middleware
+const isAuth = require('./middleware/is-auth');
 
 const app = express();
 
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
+
+// added isAuth middleware which only check if request have token/correct token in request 
+// we will make verification in resolver function because we can get there request object too
+app.use(isAuth);
 
 // graphql endpoint where graphql middleware will proccess the json to query
 // we must pass an object where we declare:

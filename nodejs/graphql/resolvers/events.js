@@ -12,8 +12,13 @@ module.exports = {
             throw err;
         };
     },
-
-    createEvent: async args => {
+    // we get arguments but request object too, where we can check if user is logged in or no
+    createEvent: async (args, req) => {
+    	// we give error if user not logged in
+    	if (!req.isAuth) {
+    		throw new Error('Unauthenticated!'); 
+    	} 
+    	
         // create a new mongodb model
         try {
             const event = new Event({
