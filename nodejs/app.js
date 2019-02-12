@@ -95,3 +95,10 @@ mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptio
     })
     .catch( err => console.log(err) );
 
+// for api test we can use postman when we have token and we need use headers because grpahql not let declar the header
+// https://www.getpostman.com/downloads/
+// must add Authorization to header
+// Bearer *token*
+// need choose raw/json
+// { "query": "query { login(email: \"test@test.com\", password: \"111111\") {token} }" }
+// { "query": "mutation { createEvent(myEventInput: {title: \"should work\", description:\"test description\", price: 21.22, date:\"2018-02-01T12:11:33.077Z\"}) {_id title} }" }

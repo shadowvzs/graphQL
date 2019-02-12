@@ -5,7 +5,11 @@ const { singleEvent, formatEvent, formatBooking } = require('./merge');
 
 module.exports = {
 
-    bookings: async args => {
+    bookings: async (args,req) => {
+    	// we give error if user not logged in
+    	if (!req.isAuth) {
+    		throw new Error('Unauthenticated!'); 
+    	} 
         try {
             const bookings = await Booking.find();
             return bookings.map( booking => formatBooking(booking));
@@ -14,11 +18,15 @@ module.exports = {
         };    
     },
 
-    bookEvent: async args => {
+    bookEvent: async (args, req) => {
+    	// we give error if user not logged in
+    	if (!req.isAuth) {
+    		throw new Error('Unauthenticated!'); 
+    	}     	
         try {
             const fetchedEvent = await Event.findById(args.eventId);
             const booking = new Booking({
-                user: '5c5e5b1a9ea00201f09da9b8',
+                user: req.userId,
                 event: fetchedEvent._id
             });
             const result = await booking.save();
@@ -28,7 +36,11 @@ module.exports = {
         };    
     },
 
-    cancelBooking: async args => {
+    cancelBooking: async (args,req) => {
+        // we give error if user not logged in
+    	if (!req.isAuth) {
+    		throw new Error('Unauthenticated!'); 
+    	} 	
         try {
             const booking = await Booking.findById(args.bookingId);
             if (!booking) {

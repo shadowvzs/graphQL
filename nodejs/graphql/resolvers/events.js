@@ -26,7 +26,7 @@ module.exports = {
                 description: args.myEventInput.description,
                 price: +args.myEventInput.price,
                 date: new Date(args.myEventInput.date),
-                creator: '5c5e73a9241d0f059bc231c6'
+                creator: req.userId
             });
 
             const savedEvent = await event.save();
