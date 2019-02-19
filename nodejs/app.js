@@ -18,6 +18,16 @@ const app = express();
 // parse the request body which was sent from frontend
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	if (req.method === "OPTIONS") {
+		return res.sendStatus(200);
+	}
+	next();
+});
+
 // added isAuth middleware which only check if request have token/correct token in request 
 // we will make verification in resolver function because we can get there request object too
 app.use(isAuth);
@@ -91,7 +101,7 @@ mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptio
     .then(() => {
         // if we can connect to mongodb then we start express http server
         console.log('kakukk');
-        app.listen(3000);
+        app.listen(8000);
     })
     .catch( err => console.log(err) );
 

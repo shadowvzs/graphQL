@@ -4,4 +4,6 @@ git
 nodejs/node_modules
 nodejs/package-lock.json
 nodejs/nodemon.json
+frontend/node_modules
+frontend/package-lock.json
 mongoDB/db
