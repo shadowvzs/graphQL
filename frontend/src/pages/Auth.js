@@ -77,7 +77,6 @@ class AuthPage extends Component {
 
             if (this.state.isLogin) {
                 const { token, tokenExpiration, userId } = res.data.login;
-                console.log(this.context)
                 this.context.login(userId, token, tokenExpiration);
                 console.log(res.data.login);
             } else {

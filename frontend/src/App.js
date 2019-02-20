@@ -35,18 +35,19 @@ class App extends Component {
         };
 
         // we can make conditions for routes too, depend on our state (user logged or not logged)
+        // we place last route a default if not have token the current user
         return (
             <BrowserRouter className="App">
                 <AuthContext.Provider value={contextValues}>
                     <MainNavigation />
                     <main className="main-content">
                         <Switch>
-                            { !this.state.token && (<Redirect from="/" to="/auth" exact />) }
                             { this.state.token && (<Redirect from="/" to="/events" exact />) }
                             { this.state.token && (<Redirect from="/auth" to="/events" exact />) }
-                            { !this.state.token && (<Route exact path="/auth" component={AuthPage} />) }
-                            <Route exact path="/events" component={EventsPage} />
                             { this.state.token && (<Route exact path="/bookings" component={BookingsPage} />) }
+                            <Route exact path="/events" component={EventsPage} />
+                            { !this.state.token && (<Redirect from="/" to="/auth" exact />) }
+                            { !this.state.token && (<Route exact path="/auth" component={AuthPage} />) }
                         </Switch>
                     </main>
                 </AuthContext.Provider>

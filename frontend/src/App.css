@@ -1,3 +1,24 @@
 .main-content {
     margin: 4rem 2.5rem;
 }
+
+.form-actions button,
+.btn {
+    background-color: #aaf;
+    font: inherit;
+    border: 1px solid #aaf;
+    border-radius: 3px;
+    padding: 0.25rem 1rem;
+    color: white;
+    margin-right: 1rem;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.26);
+    cursor: pointer;
+}
+
+.form-actions button:hover,
+.form-actions button:active,
+.btn:hover,
+.btn:active {
+    background-color: #99f;
+    border: 1px solid #99f;
+}
