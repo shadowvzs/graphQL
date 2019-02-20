@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
 
-import './Auth.css';
+import AuthContext from '../context/auth-context';
 
+import './Auth.css';
 
 class AuthPage extends Component {
 
     state = {
         isLogin: true
     }
+
+    static contextType = AuthContext;
 
     constructor(props) {
         super(props);
@@ -30,32 +33,6 @@ class AuthPage extends Component {
         if (!email.trim().length || !password.trim().length) {
             return;
         }
-
-        /*
-        const requestBody = {
-            query: `
-              mutation {
-                  createUser(myUserInput: {email: "${email}", password: "${password}"}) {
-                      _id
-                      email
-                  }
-              }
-            `
-        };
-
-        /*
-        const requestBody = {
-            query: `
-              query {
-                  login(email: "${email}", password: "${password}") {
-                      userId
-                      token
-                      tokenExpiration
-                  }
-              }
-            `
-        };
-        */
 
         const requestBody = {
             query: `
@@ -99,6 +76,9 @@ class AuthPage extends Component {
             }
 
             if (this.state.isLogin) {
+                const { token, tokenExpiration, userId } = res.data.login;
+                console.log(this.context)
+                this.context.login(userId, token, tokenExpiration);
                 console.log(res.data.login);
             } else {
                 console.log(res.data.createUser);
