@@ -8,3 +8,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.form-control {
+  margin-bottom: 1rem;
+}
+
+.form-control label {
+    margin-bottom: 0.5rem;
+}
+
+.form-control input {
+    padding: 4px 0;
+}
+
+.form-control label,
+.form-control input,
+.form-control textarea {
+    display: block;
+    width: 100%;
+}

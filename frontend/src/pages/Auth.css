@@ -4,21 +4,3 @@
     max-width: 80%;
     margin: 4rem auto;
 }
-
-.form-control {
-  margin-bottom: 1rem;
-}
-
-.form-control label {
-    margin-bottom: 0.5rem;
-}
-
-.form-control input {
-    padding: 4px 10px;
-}
-
-.form-control label,
-.form-control input {
-    display: block;
-    width: 100%;
-}
