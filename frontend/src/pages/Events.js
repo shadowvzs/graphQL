@@ -20,8 +20,14 @@ class EventsPage extends Component {
         events: []
     };
 
+    isActive = true;
+
     componentDidMount() {
         this.fetchEvents();
+    }
+
+    componentWillUnmount() {
+        this.isActive = false;
     }
 
     startCreateEventHandler = () => {
@@ -54,7 +60,7 @@ class EventsPage extends Component {
 
         const token = this.context.token;
 
-        fetch('http://localhost:8000/graphql', {
+        fetch('http://172.18.0.3:8000/graphql', {
             method: 'POST',
             body: JSON.stringify(requestBody),
             headers: {
@@ -74,7 +80,7 @@ class EventsPage extends Component {
             }
 
             // add new event to list and rerender
-            this.setState( prevState => {
+            this.isActive && this.setState( prevState => {
                 const newEvent = { ...res.data.createEvent, creator: {_id: this.context.userId} };
                 const updatedEvents = [...prevState.events, newEvent];
                 return { events: updatedEvents, creating: false };
@@ -82,6 +88,53 @@ class EventsPage extends Component {
 
         })
         .catch(err => console.error(err));
+    };
+
+    bookEventHandler = () => {
+
+        const token = this.context.token;
+        if (!token) { return this.modalCancelHandler(); }
+
+        const requestBody = {
+            query: `
+              mutation {
+                  bookEvent(eventId: "${this.state.selectedEvent._id}") {
+                      _id
+                      createdAt
+                      updatedAt
+                  }
+              }
+            `
+        };
+
+        fetch('http://172.18.0.3:8000/graphql', {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        .then(res => {
+              if (res.status !== 200 && res.status !== 201 ) {
+                  throw new Error('Failed!');
+              }
+              return res.json();
+        })
+        .then(res => {
+            if (res.errors) {
+                throw new Error(res.errors[0].message);
+            }
+
+            this.isActive && this.setState({
+                creating: false,
+                isLoading: false
+            });
+        })
+        .catch(err => {
+            this.isActive && this.setState( { isLoading: false } );
+            console.error(err);
+        });
     };
 
     modalCancelHandler = () => {
@@ -115,7 +168,7 @@ class EventsPage extends Component {
             `
         };
 
-        fetch('http://localhost:8000/graphql', {
+        fetch('http://172.18.0.3:8000/graphql', {
             method: 'POST',
             body: JSON.stringify(requestBody),
             headers: {
@@ -133,7 +186,7 @@ class EventsPage extends Component {
                 throw new Error(res.errors[0].message);
             }
 
-            this.setState({
+            this.isActive && this.setState({
                 ...this.state,
                 events: res.data.events,
                 creating: false,
@@ -141,7 +194,7 @@ class EventsPage extends Component {
             });
         })
         .catch(err => {
-            this.setState( { isLoading: false } );
+            this.isActive && this.setState( { isLoading: false } );
             console.error(err);
         });
     }
@@ -157,53 +210,48 @@ class EventsPage extends Component {
         const selectedEvent = this.state.selectedEvent;
         return (
             <>
+                
+                {(this.state.creating || selectedEvent) && (<Backdrop />)}
                 {this.state.creating && (
-                    <>
-                        <Backdrop />
-                        <Modal
-                            title="Add Event"
-                            canConfirm
-                            canCancel
-                            onCancel={this.modalCancelHandler}
-                            onConfirm={this.modalConfirmHandler}
-                        >
-                            <form>
-                                <div className="form-control">
-                                    <label htmlFor="title"> Title </label>
-                                    <input type="text" name="title" value={this.state.title || ""} onChange={this.onChange} />
-                                </div>
-                            </form>
-                            <form>
-                                <div className="form-control">
-                                    <label htmlFor="description"> Description </label>
-                                    <textarea name="description" rows="4" value={this.state.description || ""} onChange={this.onChange} ></textarea>
-                                </div>
-                            </form>
-                            <form>
-                                <div className="form-control">
-                                    <label htmlFor="price"> Price </label>
-                                    <input type="text" name="price" value={this.state.price || 0} onChange={this.onChange}  />
-                                </div>
-                            </form>
-                            <form>
-                                <div className="form-control">
-                                    <label htmlFor="date"> Date </label>
-                                    <input type="datetime-local" name="date" value={this.state.date || ""} onChange={this.onChange}  />
-                                </div>
-                            </form>
-                        </Modal>
-                    </>
+                    <Modal
+                        title="Add Event"
+                        confirmText="Save"
+                        cancelText="Cancel"
+                        onCancel={this.modalCancelHandler}
+                        onConfirm={this.modalConfirmHandler}
+                    >
+                        <form>
+                            <div className="form-control">
+                                <label htmlFor="title"> Title </label>
+                                <input type="text" name="title" value={this.state.title || ""} onChange={this.onChange} />
+                            </div>
+                             <div className="form-control">
+                                <label htmlFor="description"> Description </label>
+                                <textarea name="description" rows="4" value={this.state.description || ""} onChange={this.onChange} ></textarea>
+                            </div>
+                            <div className="form-control">
+                                <label htmlFor="price"> Price </label>
+                                <input type="text" name="price" value={this.state.price || 0} onChange={this.onChange}  />
+                            </div>
+                             <div className="form-control">
+                                <label htmlFor="date"> Date </label>
+                                <input type="datetime-local" name="date" value={this.state.date || ""} onChange={this.onChange}  />
+                            </div>
+                        </form>
+                    </Modal>
                 )}
 
                 {selectedEvent && (
                   <Modal
                       title={selectedEvent.title}
-                      canConfirm
-                      canCancel
+                      confirmText={this.context.token ? "Book" : null}
+                      cancelText="Close"
                       onCancel={this.modalCancelHandler}
-                      onConfirm={this.modalConfirmHandler}
+                      onConfirm={this.bookEventHandler}
                   >
-                  asdasd
+                    <h1>{selectedEvent.title}</h1>
+                    <h2>${ selectedEvent.price } - {new Date(selectedEvent.date).toLocaleDateString()}</h2>
+                    <p>{ selectedEvent.description }</p>
                   </Modal>
                 )}
 

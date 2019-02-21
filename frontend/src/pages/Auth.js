@@ -6,11 +6,13 @@ import './Auth.css';
 
 class AuthPage extends Component {
 
+    static contextType = AuthContext;
+
     state = {
         isLogin: true
     }
 
-    static contextType = AuthContext;
+    isActive = true;
 
     constructor(props) {
         super(props);
@@ -57,7 +59,7 @@ class AuthPage extends Component {
                 `
         }
 
-        fetch('http://localhost:8000/graphql', {
+        fetch('http://172.18.0.3:8000/graphql', {
             method: 'POST',
             body: JSON.stringify(requestBody),
             headers: {

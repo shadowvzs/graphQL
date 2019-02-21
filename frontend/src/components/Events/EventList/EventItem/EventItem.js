@@ -10,7 +10,6 @@ const eventItem = props => {
             <div>
                 <h1> { event.title } </h1>
                 <h2> ${ event.price } - {new Date(event.date).toLocaleDateString()}</h2>
-
             </div>
             <div>
                 { props.userId === event.creator._id
