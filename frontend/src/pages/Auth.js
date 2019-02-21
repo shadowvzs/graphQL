@@ -84,7 +84,6 @@ class AuthPage extends Component {
             }
         })
         .catch(err => console.error(err));
-        console.log(email, password);
     };
 
     render () {
