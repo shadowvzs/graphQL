@@ -11,7 +11,7 @@ module.exports = {
     		throw new Error('Unauthenticated!'); 
     	} 
         try {
-            const bookings = await Booking.find();
+            const bookings = await Booking.find({user: req.userId});
             return bookings.map( booking => formatBooking(booking));
         } catch(err) { 
             throw err;
@@ -42,17 +42,23 @@ module.exports = {
     		throw new Error('Unauthenticated!'); 
     	} 	
         try {
-            const booking = await Booking.findById(args.bookingId);
+            const booking = await Booking.findOne({_id: args.bookingId, user: req.userId});
+            const eventId = booking.event;
+
             if (!booking) {
                 throw "Booking not exist";
             }
+
             if (!await Booking.deleteOne({_id: booking.id})) {
                 throw "Booking cannot be deleted";
             }
+
             const event = await singleEvent(booking.event);
+
             if (!event) {
                 throw "Event not exist";
             }
+
             return event;
         } catch(err) { 
             throw err;
