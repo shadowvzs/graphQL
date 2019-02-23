@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 
+import FetchApi from '../service/service';
 import AuthContext from '../context/auth-context';
 
 import './Auth.css';
@@ -69,33 +70,18 @@ class AuthPage extends Component {
             }
         }
 
-        fetch('http://172.18.0.3:8000/graphql', {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(res => {
-              if (res.status !== 200 && res.status !== 201 ) {
-                  throw new Error('Failed!');
-              }
-              return res.json();
-        })
-        .then(res => {
-            if (res.errors) {
-                throw new Error(res.errors[0].message);
-            }
-
+        FetchApi(
+          requestBody, 
+          null, 
+          res => {
             if (this.state.isLogin) {
                 const { token, tokenExpiration, userId } = res.data.login;
                 this.context.login(userId, token, tokenExpiration);
-                console.log(res.data.login);
             } else {
                 console.log(res.data.createUser);
             }
-        })
-        .catch(err => console.error(err));
+          },
+        );
     };
 
     render () {

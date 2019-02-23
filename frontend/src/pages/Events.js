@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 
 import AuthContext from '../context/auth-context';
-import EventList from '../components/Events/EventList/EventList';
 
+import FetchApi from '../service/service';
+
+import EventList from '../components/Events/EventList/EventList';
 import Backdrop from '../components/Backdrop/Backdrop';
 import Modal from '../components/Modal/Modal';
 import Spinner from '../components/Spinner/Spinner';
@@ -64,36 +66,18 @@ class EventsPage extends Component {
             }
         };
 
-        const token = this.context.token;
-
-        fetch('http://172.18.0.3:8000/graphql', {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+        FetchApi(
+            requestBody, 
+            this.context.token, 
+            res => {
+                // add new event to list and rerender
+                this.isActive && this.setState( prevState => {
+                    const newEvent = { ...res.data.createEvent, creator: {_id: this.context.userId} };
+                    const updatedEvents = [...prevState.events, newEvent];
+                    return { events: updatedEvents, creating: false };
+                });
             }
-        })
-        .then(res => {
-              if (res.status !== 200 && res.status !== 201 ) {
-                  throw new Error('Failed!');
-              }
-              return res.json();
-        })
-        .then(res => {
-            if (res.errors) {
-                throw new Error(res.errors[0].message);
-            }
-
-            // add new event to list and rerender
-            this.isActive && this.setState( prevState => {
-                const newEvent = { ...res.data.createEvent, creator: {_id: this.context.userId} };
-                const updatedEvents = [...prevState.events, newEvent];
-                return { events: updatedEvents, creating: false };
-            });
-
-        })
-        .catch(err => console.error(err));
+        );
     };
 
     bookEventHandler = () => {
@@ -116,34 +100,17 @@ class EventsPage extends Component {
             }
         };
 
-        fetch('http://172.18.0.3:8000/graphql', {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            }
-        })
-        .then(res => {
-              if (res.status !== 200 && res.status !== 201 ) {
-                  throw new Error('Failed!');
-              }
-              return res.json();
-        })
-        .then(res => {
-            if (res.errors) {
-                throw new Error(res.errors[0].message);
-            }
-
-            this.isActive && this.setState({
-                creating: false,
-                isLoading: false
-            });
-        })
-        .catch(err => {
-            this.isActive && this.setState( { isLoading: false } );
-            console.error(err);
-        });
+        FetchApi(
+            requestBody, 
+            token, 
+            res => {
+                this.isActive && this.setState({
+                    creating: false,
+                    isLoading: false
+                });
+            },
+            () => { this.isActive && this.setState( { isLoading: false } ); }
+        );
     };
 
     modalCancelHandler = () => {
@@ -177,35 +144,19 @@ class EventsPage extends Component {
             `
         };
 
-        fetch('http://172.18.0.3:8000/graphql', {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => {
-              if (res.status !== 200 && res.status !== 201 ) {
-                  throw new Error('Failed!');
-              }
-              return res.json();
-        })
-        .then(res => {
-            if (res.errors) {
-                throw new Error(res.errors[0].message);
-            }
-
-            this.isActive && this.setState({
-                ...this.state,
-                events: res.data.events,
-                creating: false,
-                isLoading: false
-            });
-        })
-        .catch(err => {
-            this.isActive && this.setState( { isLoading: false } );
-            console.error(err);
-        });
+        FetchApi(
+            requestBody, 
+            null, 
+            res => {
+                this.isActive && this.setState({
+                    ...this.state,
+                    events: res.data.events,
+                    creating: false,
+                    isLoading: false
+                });
+            },
+            () => { this.isActive && this.setState( { isLoading: false } ); }
+        );
     }
 
     showDetailHandler = (eventId) => {

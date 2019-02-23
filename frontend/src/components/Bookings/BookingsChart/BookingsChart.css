@@ -1,0 +1,18 @@
+.cart-div {
+    display: block;
+    width: 400px;
+    margin: auto;
+}
+
+.cart-div h2 {
+    text-align: center;
+    color: #99f;
+}
+
+.cart-div > div {
+    right: auto;
+}
+
+.cart-div > canvas {
+    width: 400px;
+}
