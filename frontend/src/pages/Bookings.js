@@ -27,15 +27,24 @@ class BookingsPage extends Component {
         const token = this.context.token;
         this.setState( { isLoading: true } );
 
+        // better solution for inject the data if we give name for this mutation
+        // replace the direct value (blabla="${something.id}")
+        // and where we declared name then there we add same variable name 
+        // and we can add type here
+        // so at end we can send multiple data if we use name and separate it with comma
+        // or we can send variables aswell
         const requestBody = {
             query: `
-              mutation {
-                  cancelBooking(bookingId: "${id}") {
+              mutation cancelBooking($id: ID!) {
+                  cancelBooking(bookingId: $id) {
                       _id
                       title
                   }
               }
-            `
+            `,
+            variables: {
+                id: id
+            }
         };
 
         fetch('http://172.18.0.3:8000/graphql', {
