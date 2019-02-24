@@ -88,8 +88,10 @@ GraphQL, Express, ReactJS basic project for fun
          app.use('/graphql', graphqlHttp({
              schema: graphQlSchema,
              rootValue: graphQlResolvers,
-             // graphiql: true      // only for development!, awasome help before you have frontend (host:port/graphiql in bworser)
-         }));  ```
+             // graphiql: true      
+             // only for development!, awasome help before you have frontend (host:port/graphiql in browser)
+         }));  
+```
   * in middlware we must declare: 
       * root **Shema**: this contain all schema, more information below
       * root **Resolver**: this contain all resolver, more information below
@@ -97,26 +99,11 @@ GraphQL, Express, ReactJS basic project for fun
       
       
 ##### Schema:
-* string which describe types what we use
-    * How it look our first schema (i use query and mutation):
-```javascript
-        schema {
-            query: RootQuery
-            mutation: RootMutation
-        }
-```
+* string which describe types what we use (we use query and mutation):
     * lets make root query & mutation types:
-```javascript   
-        type RootQuery {
-            events: [Event!]!
-            login(email: String!, password: String!): AuthData
-        }
-
-        type RootMutation {
-            createEvent(myEventInput: EventInput): Event
-            createUser(myUserInput: UserInput): User
-        }
-```
+    * types
+         * we can declare our own types aswell like user model structure
+         * we can use scalar values: Int, Float, String, Boolean, ID    
     * now lets all together (included model structure - must match with mongodb schema):
 ```javascript
         const graphQlSchema = buildSchema(`
@@ -174,5 +161,4 @@ GraphQL, Express, ReactJS basic project for fun
         }
     `);
 ```
-    * we can declare our own types aswell like user model structure
-    * scalar values: Int, Float, String, Boolean, ID
+fdgdfgd
