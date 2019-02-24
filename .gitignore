@@ -7,3 +7,4 @@ nodejs/nodemon.json
 frontend/node_modules
 frontend/package-lock.json
 mongoDB/db
+credentials
