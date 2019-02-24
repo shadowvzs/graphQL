@@ -205,16 +205,16 @@ module.exports = {
         };      
     },
     login: async ({ email, password}) => {
-    	const user = await User.findOne({ email });
-     // check if user is empty then check if password match
-     const token = /* create token */
+         const user = await User.findOne({ email });
+        // check if user is empty then check if password match
+        const token = /* create token */
 
-     // return same structure what we declared at login schema (AuthData type)
-    	return ({
-    		userId: user.id,
-    		token: token,
-    		tokenExpiration: 1
-    	});
+        // return same structure what we declared at login schema (AuthData type)
+    	   return ({
+    		     userId: user.id,
+    		     token: token,
+    		     tokenExpiration: 1
+    	   });
     }
 };
 ```
