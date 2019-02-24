@@ -103,7 +103,9 @@ GraphQL, Express, ReactJS basic project for fun
     * lets make root query & mutation types:
     * types
          * we can declare our own types aswell like user model structure
-         * we can use scalar values: Int, Float, String, Boolean, ID    
+         * we can use scalar values: Int, Float, String, Boolean, ID
+         * we can use array from types like [Float] or [User]
+         * if we use "!" like String! or User! then required
     * now lets all together (included model structure - must match with mongodb schema):
 ```javascript
         const graphQlSchema = buildSchema(`
@@ -144,15 +146,12 @@ GraphQL, Express, ReactJS basic project for fun
 
         type RootQuery {
             events: [Event!]!
-            bookings: [Booking!]!
             login(email: String!, password: String!): AuthData
         }
 
         type RootMutation {
             createEvent(myEventInput: EventInput): Event
             createUser(myUserInput: UserInput): User
-            bookEvent(eventId: ID!) : Booking!
-            cancelBooking(bookingId: ID!): Event!
         }
 
         schema {
@@ -161,4 +160,92 @@ GraphQL, Express, ReactJS basic project for fun
         }
     `);
 ```
-fdgdfgd
+##### Resolvers:
+   * resolver is the logic behind the schema
+   * we can use rootResolver and split up the resolver into more files
+   * look like
+   
+```javascript
+// root resolver
+const authResolver = require('./auth');
+const eventsResolver = require('./events');
+
+const rootResolver = {
+    ...authResolver,
+    ...eventsResolver,
+}
+
+module.exports = rootResolver;
+```
+Simple example without checkings about how look like the auth resolver
+
+```javascript
+// we encrypt password and for this we use bcryptjs module
+const User = require('../../models/user');
+const { formatUser } = require('./merge');
+
+module.exports = {
+    createUser: async args => {
+        try {
+            if (await User.findOne({email: args.myUserInput.email})) {
+                throw new Error('User email already exist');
+            }
+            const hashedPassword = /* we use something for hash the password */;
+            // myUserInput coming from schema, check auth schema
+            const user = new User({
+                email: args.myUserInput.email,
+                password: hashedPassword
+            });
+            const savedUser = await user.save();
+            // format user isn't here but its actually return the saved data 
+            // + make query after event which related with this user
+            return formatUser(savedUser);
+        } catch(err) { 
+            throw err;
+        };      
+    },
+    login: async ({ email, password}) => {
+    	const user = await User.findOne({ email });
+     // check if user is empty then check if password match
+     const token = /* create token */
+
+    	return ({
+    		userId: user.id,
+    		token: token,
+    		tokenExpiration: 1
+    	});
+    }
+};
+```
+
+our model
+```javascript
+const mongoose = require('mongoose');
+// extract a constructor gunction from mongoose
+const Schema = mongoose.Schema;
+// we define a new mongoDB schema with his structure (confused with graphQL schema), field types etc
+const userSchema = new Schema({
+    email: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    // we use array for user events, like array prop, User.createdEvents = []
+    createdEvents: [
+      {
+          // this will be id from event model
+          type: Schema.Types.ObjectId,
+          // set relation with other model, must be defined both here and in other model
+          ref: 'Event'
+      }
+    ]
+});
+
+// User is the mongoDB collection name, actually here we use singular but it is plural in mongoDB like users collection 
+module.exports = mongoose.model('User', userSchema);
+```
+
+Users could have more event (CreatedEvents property, contain id objects) and every event got a creator (id object)
