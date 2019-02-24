@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import {Bar} from 'react-chartjs-2';
 import './BookingsChart.css';
 
@@ -35,6 +35,7 @@ const bookingsChart = props => {
             hoverBorderColor: "rgba(220,220,220,1)",
             data: values
         });
+
         values = [...values];
         values[values.length - 1] = 0; 
     }

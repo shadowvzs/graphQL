@@ -1,4 +1,4 @@
-const endpoint = 'http://172.18.0.2:8000/graphql'
+const endpoint = 'http://172.18.0.3:8000/graphql'
 
 const api = (reqBody, token = null, onSuccess = null, onError = null) => {
     const headers = { 'Content-Type': 'application/json' };

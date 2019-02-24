@@ -15,21 +15,21 @@ const eventLoader = new DataLoader((eventIds) => {
     return events(eventIds);
 });
 
-
 const userLoader = new DataLoader((userIds) => {
     return User.find({_id: {$in: userIds } });
 });
-
-//const bookingLoader = new DataLoader((bookingIds) => {
-//    return events(bookingIds);
-//});
-
 
 // get events from events collection (by ids)
 const events = async eventIds => {
     // we search after array of ids, ex.: _id: {$in: eventsIds}
     try {
         const events = await Event.find({ _id: {$in: eventIds}} );
+        // we must sort the events because if we search with in array then not sure we get back in same order
+        // so we want get back in same order than we gived the ids
+        // important for dataloader too, if we have ids & retrived data in same order
+        events.sort((a, b) => {
+            return eventIds.indexOf(a._id.toString()) - eventIds.indexOf(b._id.toString());
+        });
         if (!events) { return false; }
         return events.map( event => formatEvent(event) );
     } catch(err) { 

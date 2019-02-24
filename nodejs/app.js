@@ -40,7 +40,7 @@ app.use(isAuth);
 app.use('/graphql', graphqlHttp({
     schema: graphQlSchema,
     rootValue: graphQlResolvers,
-    graphiql: true
+    // graphiql: true      -this only for development mode, its great help because we can use browser for debug
 }));
 
 /**
@@ -100,7 +100,7 @@ console.log(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`);
 mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, mongoOptions)
     .then(() => {
         // if we can connect to mongodb then we start express http server
-        console.log('kakukk');
+        console.log('Server is running!');
         app.listen(8000);
     })
     .catch( err => console.log(err) );

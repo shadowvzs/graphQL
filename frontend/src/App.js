@@ -16,11 +16,31 @@ class App extends Component {
 
     }
 
+    componentWillMount() {
+
+        const session = sessionStorage.getItem("userData");
+
+        if (session) {
+            const data = JSON.parse(session);
+            if (data.expireAt < Date.now()) {
+                this.login(data.userId, data.token, data.tokenExpiration);
+            }
+        }      
+    }
+
     login = (userId, token, tokenExpiration) => {
+        const userData = {
+            userId,
+            token,
+            tokenExpiration: tokenExpiration,
+            expireAt: Date.now() + tokenExpiration * 3600
+        }
+        sessionStorage.setItem("userData", JSON.stringify(userData));        
         this.setState({token, userId});
     }
 
     logout = () => {
+        sessionStorage.removeItem("userData");        
         this.setState({ userId: null, token: null })
     }
 
