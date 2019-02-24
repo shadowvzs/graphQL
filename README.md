@@ -6,6 +6,7 @@ GraphQL, Express, ReactJS basic project for fun
   * ReactJS
       * React Router v4
       * React Context
+      * React Chart JS 2
       
 * Backend: 
   * Express 
